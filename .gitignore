@@ -7,6 +7,8 @@
 #
 .*
 !.checkpatch.conf
+!.config
+!.config.old
 *.a
 *.asn1.[ch]
 *.bin
