@@ -137,7 +137,7 @@ obj-$(CONFIG_CMD_UNZIP) += unzip.o
 ifdef CONFIG_LZMA
 obj-$(CONFIG_CMD_LZMADEC) += lzmadec.o
 endif
-
+obj-$(CONFIG_CMD_UPB) += upb.o
 obj-$(CONFIG_CMD_USB) += usb.o disk.o
 obj-$(CONFIG_CMD_FASTBOOT) += fastboot.o
 obj-$(CONFIG_CMD_FS_UUID) += fs_uuid.o

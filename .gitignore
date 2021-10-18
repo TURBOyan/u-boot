@@ -6,6 +6,8 @@
 # Normal rules
 #
 .*
+!.config
+!.config.old
 *.o
 *.o.*
 *.a
