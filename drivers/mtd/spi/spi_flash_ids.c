@@ -84,7 +84,6 @@ const struct spi_flash_info spi_flash_ids[] = {
 	{"mx25l12855e",	   INFO(0xc22618, 0x0, 64 * 1024,   256, RD_FULL | WR_QPP) },
 	{"mx66u51235f",    INFO(0xc2253a, 0x0, 64 * 1024,  1024, RD_FULL | WR_QPP) },
 	{"mx66l1g45g",     INFO(0xc2201b, 0x0, 64 * 1024,  2048, RD_FULL | WR_QPP) },
-	{"xt25f128",       INFO(0x0b4018, 0x0,  64*1024,     256, SECT_4K)},
 #endif
 #ifdef CONFIG_SPI_FLASH_SPANSION	/* SPANSION */
 	{"s25fl008a",	   INFO(0x010213, 0x0, 64 * 1024,    16, 0) },
@@ -167,6 +166,7 @@ const struct spi_flash_info spi_flash_ids[] = {
 	{"w25q32dw",	   INFO(0xef6016, 0x0,	64 * 1024,    64, RD_FULL | WR_QPP | SECT_4K) },
 	{"w25q64dw",	   INFO(0xef6017, 0x0,	64 * 1024,   128, RD_FULL | WR_QPP | SECT_4K) },
 	{"w25q128fw",	   INFO(0xef6018, 0x0,	64 * 1024,   256, RD_FULL | WR_QPP | SECT_4K) },
+	{"xt25f128b",      INFO(0x0b4018, 0x0,  64 * 1024,   256, RD_FULL | WR_QPP | SECT_4K) },
 #endif
 	{},	/* Empty entry to terminate the list */
 	/*
