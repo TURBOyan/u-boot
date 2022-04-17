@@ -52,7 +52,19 @@ static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
         return -1;
     }
 
+    //erase the uboot
     sprintf(cmd_str , "sf erase 0x00 0x%x" , File_Size_Max);
+    printf("===cmd====< %s >====start=====\n",cmd_str);
+    ret = run_command (cmd_str, CMD_FLAG_REPEAT);
+    if(ret != 0)
+    {
+        printf("#### ERROR:  <%s>  ####\n", cmd_str);
+        printf("#### upb out ####\n");
+        return -1;
+    }
+
+    //erase the uboot env args
+    sprintf(cmd_str , "sf erase 0x%x 0x%x" , CONFIG_ENV_OFFSET , CONFIG_ENV_SIZE);
     printf("===cmd====< %s >====start=====\n",cmd_str);
     ret = run_command (cmd_str, CMD_FLAG_REPEAT);
     if(ret != 0)
