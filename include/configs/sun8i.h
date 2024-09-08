@@ -30,26 +30,27 @@
 /**
  * @brief SPI FLASH启动
  */
-/*
 #define CONFIG_BOOTCOMMAND   "sf probe 0; "                           \
-                            "sf read 0x41800000 0x100000 0x10000; "  \
-                            "sf read 0x41000000 0x110000 0x400000; " \
-                            "bootz 0x41000000 - 0x41800000"               
+                             "sf read 0x41800000 0x100000 0x10000; "  \
+                             "sf read 0x41000000 0x110000 0x500000; " \
+                             "bootz 0x41000000 - 0x41800000"
 
-#define CONFIG_BOOTARGS      "console=ttyS0,115200 earlyprintk panic=5 rootwait " \
-                            "mtdparts=spi32766.0:1M(uboot)ro,64k(dtb)ro,4M(kernel)ro,-(rootfs) root=31:03 rw rootfstype=jffs2"
-*/ 
+ #define CONFIG_BOOTARGS      "console=ttyS0,115200 earlyprintk panic=5 rootwait " \
+                             "mtdparts=spi32766.0:1M(uboot)ro,64k(dtb)ro,5M(kernel)ro,-(rootfs) root=/dev/mtdblock3 rw rootfstype=jffs2 init=/linuxrc vt.global_cursor_default=0"
+
 
 
 /**
  * @brief TF卡启动
  */
+/*
 #define CONFIG_BOOTCOMMAND   "setenv bootm_boot_mode sec; " \
                             "load mmc 0:1 0x41000000 zImage; "  \
                             "load mmc 0:1 0x41800000 sun8i-v3s-licheepi-zero-dock.dtb; " \
                             "bootz 0x41000000 - 0x41800000;"
  
 #define CONFIG_BOOTARGS      "console=ttyS0,115200 panic=5 rootwait root=/dev/mmcblk0p2 earlyprintk rw  vt.global_cursor_default=0"
+*/
 
 
 /**
