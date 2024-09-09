@@ -12,17 +12,17 @@
 #include <command.h>
 #include <stdio_dev.h>
 
-#define FILE_SIZE_MAX   (500*1024)   //uboot 固件文件最大大小
+#define FILE_SIZE_MAX   (16*1024*1024)   //digicap 固件文件最大大小
 #define SRAM_BUF_ADDR   (0x80600000)
-#define DEFAULT_UBOOT_FILE "u-boot-sunxi-with-spl.bin"
+#define DEFAULT_DIGICAP_FILE "digicap.dav"
 
-char cmd_str[100];
-char UPB_FILE[200];
+char UPDATE_FILE[200];
 
 static int get_tftp(char* file_name, int file_size_max, int sram_offset)
 {
     int ret = 0;
-    printf("====TFTP get uboot file:%s from %s====\n",file_name ,getenv("serverip"));
+    char cmd_str[100];
+    printf("====TFTP get digicap file:%s from %s====\n",file_name ,getenv("serverip"));
 
     //erase the tmp sram buf
     sprintf(cmd_str , "mw.b 0x%x 0xff 0x%x" , sram_offset , file_size_max);
@@ -51,6 +51,7 @@ static int get_tftp(char* file_name, int file_size_max, int sram_offset)
 static int get_mmc(char* file_name, int file_size_max, int sram_offset)
 {
     int ret = 0;
+    char cmd_str[100];
 
     //erase the tmp sram buf
     sprintf(cmd_str , "mw.b 0x%x 0xff 0x%x" , sram_offset , file_size_max);
@@ -76,28 +77,29 @@ static int get_mmc(char* file_name, int file_size_max, int sram_offset)
     return 0;
 }
 
-static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
+static int do_update(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
 {
     int ret = 0;
-	printf("====Start to uptate the uboot, you can setenv upb_file to set the uboot file name====\n");
+    char cmd_str[100];
+	printf("====Start to uptate the digicap.dav, you can setenv update_file to set the digicap file name====\n");
 
-    //如果upb文件名未设置，则使用默认值DEFAULT_UBOOT_FILE
-    if(getenv("upb_file") == NULL)
+    //如果update_file文件名未设置，则使用默认值DEFAULT_DIGICAP_FILE
+    if(getenv("update_file") == NULL)
     {
-        strcpy(UPB_FILE, DEFAULT_UBOOT_FILE);
-        printf("[WARN] pUPB_FILE is NULL, use the default uboot name:%s\n",UPB_FILE);
+        strcpy(UPDATE_FILE, DEFAULT_DIGICAP_FILE);
+        printf("[WARN] pUPB_FILE is NULL, use the default digicap name:%s\n",UPDATE_FILE);
     }
     else
     {
-        strcpy(UPB_FILE, getenv("upb_file"));
+        strcpy(UPDATE_FILE, getenv("upb_file"));
     }
 
-    /************************get uboot from tftp or mmc************************** */
+    /************************get digicap from tftp or mmc************************** */
 
     if(argv[1] != NULL && !strcmp(argv[1], "mmc"))
     {
-        printf("====load uboot file from mmc====\n");
-        ret = get_mmc(UPB_FILE, FILE_SIZE_MAX, SRAM_BUF_ADDR);
+        printf("====load digicap file from mmc====\n");
+        ret = get_mmc(UPDATE_FILE, FILE_SIZE_MAX, SRAM_BUF_ADDR);
         if(ret != 0)
         {
             printf("#### ERROR:  <upb_mmc, ret:%d>  ####\n", ret);
@@ -106,8 +108,8 @@ static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
     }
     else
     {
-        printf("====load uboot file from tftp====\n");
-        ret = get_tftp(UPB_FILE, FILE_SIZE_MAX, SRAM_BUF_ADDR);
+        printf("====load digicap file from tftp====\n");
+        ret = get_tftp(UPDATE_FILE, FILE_SIZE_MAX, SRAM_BUF_ADDR);
         if(ret != 0)
         {
             printf("#### ERROR:  <upb_tftp, ret:%d>  ####\n", ret);
@@ -115,7 +117,7 @@ static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
         }
     }
 
-    /************************write uboot to spi flash from ram************************** */
+    /************************write digicap to spi flash from ram************************** */
     sprintf(cmd_str , "sf probe");
     printf("===cmd====< %s >====start=====\n",cmd_str);
     ret = run_command (cmd_str, CMD_FLAG_REPEAT);
@@ -125,8 +127,7 @@ static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
         printf("#### upb out ####\n");
         return -3;
     }
-
-    //erase the uboot
+    //erase the digicap
     sprintf(cmd_str , "sf erase 0x00 0x%x" , FILE_SIZE_MAX);
     printf("===cmd====< %s >====start=====\n",cmd_str);
     ret = run_command (cmd_str, CMD_FLAG_REPEAT);
@@ -137,16 +138,16 @@ static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
         return -4;
     }
 
-    //erase the uboot env args
-    sprintf(cmd_str , "sf erase 0x%x 0x%x" , CONFIG_ENV_OFFSET , CONFIG_ENV_SIZE);
-    printf("===cmd====< %s >====start=====\n",cmd_str);
-    ret = run_command (cmd_str, CMD_FLAG_REPEAT);
-    if(ret != 0)
-    {
-        printf("#### ERROR:  <%s>  ####\n", cmd_str);
-        printf("#### upb out ####\n");
-        return -5;
-    }
+    // //erase the digicap env args
+    // sprintf(cmd_str , "sf erase 0x%x 0x%x" , CONFIG_ENV_OFFSET , CONFIG_ENV_SIZE);
+    // printf("===cmd====< %s >====start=====\n",cmd_str);
+    // ret = run_command (cmd_str, CMD_FLAG_REPEAT);
+    // if(ret != 0)
+    // {
+    //     printf("#### ERROR:  <%s>  ####\n", cmd_str);
+    //     printf("#### upb out ####\n");
+    //     return -5;
+    // }
 
     sprintf(cmd_str , "sf write 0x%x  0x%x 0x%x" , SRAM_BUF_ADDR , 0x00 , FILE_SIZE_MAX);
     printf("===cmd====< %s >====start=====\n",cmd_str);
@@ -175,7 +176,7 @@ static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
 /***************************************************/
 
 U_BOOT_CMD(
-	upb,	3 ,	0,	do_upb,
-    "update the uboot from mmc or tftp",
-	"run this cmd to update the uboot to SPI Flash, [upb mmc] or [upb tftp], default is tftp"
+	update,	3 ,	0,	do_update,
+    "update the digicap from mmc or tftp",
+	"run this cmd to update the digicap to SPI Flash, [upb mmc] or [upb tftp], default is tftp"
 );
