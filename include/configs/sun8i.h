@@ -57,6 +57,7 @@
  * @brief 开启UPB，自动通过TFTP烧写uboot到SPI FLASH
  */
 #define CONFIG_CMD_UPB
+#define CONFIG_CMD_UPDATE
 
 /*
  * Include common sunxi configuration where most the settings are
