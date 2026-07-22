@@ -27,33 +27,6 @@
 #endif
 
 /**
- * @brief 自动启动：优先 SD 卡，失败回 SPI Flash
- *        同一份 u-boot 烧到 SD 卡或 SPI Flash 均可启动
- */
-#define CONFIG_BOOTCOMMAND \
-	"echo 'Trying SD card boot...'; " \
-	"if fatload mmc 0:1 0x41000000 zImage && " \
-	    "fatload mmc 0:1 0x41800000 sun8i-v3s-licheepi-zero.dtb; then " \
-	    "setenv bootargs console=ttyS0,115200 panic=5 rootwait " \
-		"root=/dev/mmcblk0p2 earlyprintk rw vt.global_cursor_default=0; " \
-	    "echo 'Booting from SD card...'; " \
-	    "bootz 0x41000000 - 0x41800000; " \
-	"fi; " \
-	"echo 'SD boot failed, fallback to SPI flash...'; " \
-	"sf probe 0; " \
-	"sf read 0x41800000 0x100000 0x10000; " \
-	"sf read 0x41000000 0x110000 0x500000; " \
-	"setenv bootargs console=ttyS0,115200 earlyprintk panic=5 rootwait " \
-	    "mtdparts=spi32766.0:1M(uboot)ro,64k(dtb)ro,5M(kernel)ro,-(rootfs) " \
-	    "root=/dev/mtdblock3 rw rootfstype=jffs2 init=/linuxrc vt.global_cursor_default=0; " \
-	"echo 'Booting from SPI flash...'; " \
-	"bootz 0x41000000 - 0x41800000"
-
-#define CONFIG_BOOTARGS \
-	"console=ttyS0,115200 panic=5 rootwait root=/dev/mmcblk0p2 earlyprintk rw vt.global_cursor_default=0"
-
-
-/**
  * @brief 开启UPB，自动通过TFTP烧写uboot到SPI FLASH
  */
 #define CONFIG_CMD_UPB
