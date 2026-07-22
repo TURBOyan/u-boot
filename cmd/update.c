@@ -8,8 +8,9 @@
 /*
  * Boot support
  */
-#include <common.h>
 #include <command.h>
+#include <env.h>
+#include <vsprintf.h>
 #include <stdio_dev.h>
 
 #define FILE_SIZE_MAX   (16*1024*1024)   //digicap 固件文件最大大小
@@ -22,7 +23,7 @@ static int get_tftp(char* file_name, int file_size_max, int sram_offset)
 {
     int ret = 0;
     char cmd_str[100];
-    printf("====TFTP get digicap file:%s from %s====\n",file_name ,getenv("serverip"));
+    printf("====TFTP get digicap file:%s from %s====\n",file_name ,env_get("serverip"));
 
     //erase the tmp sram buf
     sprintf(cmd_str , "mw.b 0x%x 0xff 0x%x" , sram_offset , file_size_max);
@@ -77,21 +78,21 @@ static int get_mmc(char* file_name, int file_size_max, int sram_offset)
     return 0;
 }
 
-static int do_update(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
+static int do_update(struct cmd_tbl *cmd, int flag, int argc, char * const argv[])
 {
     int ret = 0;
     char cmd_str[100];
 	printf("====Start to uptate the digicap.dav, you can setenv update_file to set the digicap file name====\n");
 
     //如果update_file文件名未设置，则使用默认值DEFAULT_DIGICAP_FILE
-    if(getenv("update_file") == NULL)
+    if(env_get("update_file") == NULL)
     {
         strcpy(UPDATE_FILE, DEFAULT_DIGICAP_FILE);
         printf("[WARN] pUPB_FILE is NULL, use the default digicap name:%s\n",UPDATE_FILE);
     }
     else
     {
-        strcpy(UPDATE_FILE, getenv("upb_file"));
+        strcpy(UPDATE_FILE, env_get("upb_file"));
     }
 
     /************************get digicap from tftp or mmc************************** */

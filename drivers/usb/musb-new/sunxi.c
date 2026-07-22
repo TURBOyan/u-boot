@@ -378,6 +378,22 @@ static const struct musb_platform_ops sunxi_musb_ops = {
 	.post_root_reset_end = sunxi_musb_post_root_reset_end,
 };
 
+#if CONFIG_IS_ENABLED(DM_USB_GADGET)
+static int sunxi_musb_gadget_handle_interrupts(struct udevice *dev)
+{
+	struct sunxi_glue *glue = dev_get_priv(dev);
+	struct musb *musb = glue->mdata.host;
+
+	musb->isr(0, musb);
+
+	return 0;
+}
+
+static const struct usb_gadget_generic_ops sunxi_musb_gadget_ops = {
+	.handle_interrupts	= sunxi_musb_gadget_handle_interrupts,
+};
+#endif
+
 /* Allwinner OTG supports up to 5 endpoints */
 #define SUNXI_MUSB_MAX_EP_NUM		6
 #define SUNXI_MUSB_RAM_BITS		11
@@ -481,6 +497,18 @@ static int musb_usb_probe(struct udevice *dev)
 	ret = musb_lowlevel_init(host);
 	if (!ret)
 		printf("Allwinner mUSB OTG (Host)\n");
+#elif CONFIG_IS_ENABLED(DM_USB_GADGET)
+	pdata.mode = MUSB_PERIPHERAL;
+	host->host = musb_init_controller(&pdata, &glue->dev, base);
+	if (!host->host)
+		return -EIO;
+
+	musb_gadget_setup(host->host);
+	ret = usb_add_gadget_udc((struct device *)dev, &host->host->g);
+	if (ret)
+		return ret;
+
+	printf("Allwinner mUSB OTG (Peripheral)\n");
 #else
 	pdata.mode = MUSB_PERIPHERAL;
 	host->host = musb_register(&pdata, &glue->dev, base);
@@ -498,6 +526,9 @@ static int musb_usb_remove(struct udevice *dev)
 	struct sunxi_glue *glue = dev_get_priv(dev);
 	struct musb_host_data *host = &glue->mdata;
 
+#if CONFIG_IS_ENABLED(DM_USB_GADGET) && !defined(CONFIG_USB_MUSB_HOST)
+	usb_del_gadget_udc(&host->host->g);
+#endif
 	musb_stop(host->host);
 	free(host->host);
 	host->host = NULL;
@@ -557,6 +588,9 @@ U_BOOT_DRIVER(usb_musb) = {
 	.remove		= musb_usb_remove,
 #ifdef CONFIG_USB_MUSB_HOST
 	.ops		= &musb_usb_ops,
+#endif
+#if CONFIG_IS_ENABLED(DM_USB_GADGET) && !defined(CONFIG_USB_MUSB_HOST)
+	.ops		= &sunxi_musb_gadget_ops,
 #endif
 	.plat_auto	= sizeof(struct usb_plat),
 	.priv_auto	= sizeof(struct sunxi_glue),

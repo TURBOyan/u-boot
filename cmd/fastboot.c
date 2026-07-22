@@ -8,9 +8,11 @@
  */
 #include <command.h>
 #include <console.h>
+#include <env.h>
 #include <g_dnl.h>
 #include <fastboot.h>
 #include <net.h>
+#include <time.h>
 #include <usb.h>
 #include <watchdog.h>
 #include <linux/printk.h>
@@ -66,6 +68,8 @@ static int do_fastboot_usb(int argc, char *const argv[],
 	struct udevice *udc;
 	char *endp;
 	int ret;
+	unsigned long timeout_sec = 0;
+	unsigned long start_time;
 
 	if (!IS_ENABLED(CONFIG_USB_FUNCTION_FASTBOOT)) {
 		pr_err("Fastboot USB not enabled\n");
@@ -92,6 +96,52 @@ static int do_fastboot_usb(int argc, char *const argv[],
 	ret = g_dnl_register("usb_dnl_fastboot");
 	if (ret)
 		return ret;
+
+	/* Optional timeout window: if "fastboot_timeout" env is set,
+	 * wait up to N seconds for a USB host to connect. When the
+	 * timeout expires with no host activity, exit silently so the
+	 * boot continues.  A connected host (VBUS) cancels the timeout
+	 * and we wait indefinitely.
+	 * Usable with: setenv preboot "fastboot usb 0"
+	 */
+	{
+		char *s = env_get("fastboot_timeout");
+		if (s)
+			timeout_sec = simple_strtoul(s, NULL, 10);
+	}
+
+	if (timeout_sec > 0) {
+		printf("Enter fastboot (timeout %lu s, press Ctrl+C or "
+		       "plug USB to stay)...\n", timeout_sec);
+		start_time = get_timer(0);
+
+		while (1) {
+			if (g_dnl_detach())
+				break;
+			if (ctrlc()) {
+				puts("Interrupted, staying in fastboot.\n");
+				timeout_sec = 0;
+				break;
+			}
+
+			schedule();
+			dm_usb_gadget_handle_interrupts(udc);
+
+			/* USB host connected -> cancel timeout */
+			if (g_dnl_board_usb_cable_connected()) {
+				printf("USB host detected, staying in "
+				       "fastboot.\n");
+				timeout_sec = 0;
+				break;
+			}
+
+			if (get_timer(start_time) > timeout_sec * 1000) {
+				puts("Fastboot timeout, continue boot.\n");
+				ret = CMD_RET_SUCCESS;
+				goto exit;
+			}
+		}
+	}
 
 	if (!g_dnl_board_usb_cable_connected()) {
 		puts("\rUSB cable not detected.\n" \

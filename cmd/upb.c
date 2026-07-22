@@ -8,9 +8,14 @@
 /*
  * Boot support
  */
-#include <common.h>
 #include <command.h>
+#include <env.h>
+#include <vsprintf.h>
 #include <stdio_dev.h>
+
+#ifndef CONFIG_ENV_OFFSET
+#define CONFIG_ENV_OFFSET 0x80000
+#endif
 
 #define FILE_SIZE_MAX   (500*1024)   //uboot 固件文件最大大小
 #define SRAM_BUF_ADDR   (0x80600000)
@@ -22,7 +27,7 @@ char UPB_FILE[200];
 static int get_tftp(char* file_name, int file_size_max, int sram_offset)
 {
     int ret = 0;
-    printf("====TFTP get uboot file:%s from %s====\n",file_name ,getenv("serverip"));
+    printf("====TFTP get uboot file:%s from %s====\n",file_name ,env_get("serverip"));
 
     //erase the tmp sram buf
     sprintf(cmd_str , "mw.b 0x%x 0xff 0x%x" , sram_offset , file_size_max);
@@ -76,20 +81,20 @@ static int get_mmc(char* file_name, int file_size_max, int sram_offset)
     return 0;
 }
 
-static int do_upb(cmd_tbl_t *cmd, int flag, int argc, char * const argv[])
+static int do_upb(struct cmd_tbl *cmd, int flag, int argc, char * const argv[])
 {
     int ret = 0;
 	printf("====Start to uptate the uboot, you can setenv upb_file to set the uboot file name====\n");
 
     //如果upb文件名未设置，则使用默认值DEFAULT_UBOOT_FILE
-    if(getenv("upb_file") == NULL)
+    if(env_get("upb_file") == NULL)
     {
         strcpy(UPB_FILE, DEFAULT_UBOOT_FILE);
         printf("[WARN] pUPB_FILE is NULL, use the default uboot name:%s\n",UPB_FILE);
     }
     else
     {
-        strcpy(UPB_FILE, getenv("upb_file"));
+        strcpy(UPB_FILE, env_get("upb_file"));
     }
 
     /************************get uboot from tftp or mmc************************** */
