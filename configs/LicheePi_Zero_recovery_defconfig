@@ -28,8 +28,14 @@ CONFIG_USB_FUNCTION_FASTBOOT=y
 CONFIG_CMD_FASTBOOT=y
 CONFIG_FASTBOOT_FLASH_MMC=y
 # CONFIG_TOOLS_MKEFICAPSULE is not set
+# CONFIG_ANDROID_BOOT_IMAGE is not set
 CONFIG_USE_PREBOOT=y
 CONFIG_PREBOOT="setenv fastboot_raw_partition_uboot 0x10 0x2000; setenv fastboot_timeout 5; fastboot usb 0"
 CONFIG_USE_BOOTCOMMAND=y
 CONFIG_BOOTCOMMAND="echo 'Booting from SD card (GPT)...'; mmc dev 0; if part start mmc 0 kernel kernel_start && part start mmc 0 dtb dtb_start; then mmc read 0x41000000 ${kernel_start} 0x5000; mmc read 0x41800000 ${dtb_start} 0x200; setenv bootargs console=ttyS0,115200 root=/dev/mmcblk0p4 rw rootwait gpt; bootz 0x41000000 - 0x41800000; fi; echo 'BOOT FAILED'"
 CONFIG_BOOTDELAY=0
+
+CONFIG_FASTBOOT_BUF_ADDR=0x40000000
+CONFIG_SYS_LOAD_ADDR=0x41000000
+CONFIG_SYS_MALLOC_LEN=0xA00000
+CONFIG_STACK_SIZE=0x400000
